@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:orientation="vertical">
+
+    <!--<FrameLayout
+        android:layout_width="410dp"
+        android:layout_height="600dp">
+
+    </FrameLayout>-->
+
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!--android:layout_height="725dp"-->
+    <!--android:layout_width="410dp"-->
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_above="@+id/card"
+        android:layout_marginBottom="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_width="250dp"
+        android:layout_height="120dp"
+        android:background="@drawable/rectangle"
+        android:orientation="horizontal" />
+
+    <Button
+        android:id="@+id/btn"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_linked_camera_black_24dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+    <TextView
+        android:id="@+id/card"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="请将银行卡移置框内"
+        android:textStyle="bold"
+        android:textSize="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_above="@+id/btn"
+        android:layout_marginBottom="30dp"/>
+
+</RelativeLayout>
