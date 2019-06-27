@@ -7,11 +7,11 @@
     tools:context=".MainActivity"
     android:orientation="vertical">
 
-    <!--<FrameLayout
+    <FrameLayout
         android:layout_width="410dp"
-        android:layout_height="600dp">
+        android:layout_height="610dp">
 
-    </FrameLayout>-->
+    </FrameLayout>
 
     <SurfaceView
         android:id="@+id/surfaceView"

@@ -1,61 +1,41 @@
 package com.example.cameraactivity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Matrix;
-import android.graphics.Paint;
 import android.graphics.PixelFormat;
-import android.graphics.Point;
-import android.graphics.RectF;
 import android.hardware.Camera;
-import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
-import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
-import android.widget.LinearLayout;
-
+import android.widget.EditText;
+import android.widget.Toast;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener {
 
-    private Context mContext;
     private SurfaceView mSurfaceView;
     private Socket socket;
     private Camera camera;
     private Button mtakePic;
-    private String TAG="MainActivity001";
-    private final static String HOST="192.168.43.142";
+    private final static String TAG="MainActivity001";
+    private String host="";
     private final static int PORT = 4714;
     private File tempFile;
 
@@ -63,12 +43,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().hide();
         setContentView(R.layout.activity_main);
-        mContext = this;
         permmsion();
         findView();
         init();
         mtakePic.setOnClickListener(this);
+
     }
 
     private void permmsion(){
@@ -78,12 +59,21 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.CAMERA},1);
         }
     }
-    @SuppressLint("WrongCall")
     private void findView() {
         mtakePic = findViewById(R.id.btn);
         mSurfaceView  = findViewById(R.id.surfaceView);
-        LinearLayout layout = findViewById(R.id.linearLayout1);
-        Log.d(TAG," 左:"+layout.getLeft()+"  右:"+layout.getRight()+"  上:"+layout.getTop()+"  下:"+layout.getBottom());
+        final EditText editText = new EditText(this);
+        new AlertDialog.Builder(this)
+                .setTitle("请输入本机IP:")
+                .setView(editText)
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Toast.makeText(MainActivity.this,"已连接ip为:"+editText.getText().toString(),Toast.LENGTH_SHORT).show();
+                        host = editText.getText().toString();
+                    }
+                })
+                .show();
     }
 
     private void init() {
@@ -96,6 +86,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     @Override
     public void onClick(View v) {
         if(v.getId()==R.id.btn){
+            Toast.makeText(MainActivity.this,"开始上传",Toast.LENGTH_SHORT).show();
             Timer timer =new Timer();
             timer.schedule(new TimerTask() {
                 @Override
@@ -108,7 +99,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                         public void run() {
                             try {
                                 if(tempFile.exists()){
-                                    socket = new Socket(HOST, PORT);
+                                    socket = new Socket(host, PORT);
                                     //Log.d(TAG,socket.toString());
                                     //读取图片文件并上传
                                     FileInputStream fis = new FileInputStream(tempFile);
