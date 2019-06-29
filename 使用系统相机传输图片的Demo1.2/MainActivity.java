@@ -14,7 +14,6 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -38,6 +37,9 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private String host="";
     private final static int PORT = 4714;
     private File tempFile;
+    private Timer timer;
+    private Button mCancel;
+    private Button mClose;
 
 
     @Override
@@ -48,7 +50,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         permmsion();
         findView();
         init();
-        mtakePic.setOnClickListener(this);
+
 
     }
 
@@ -60,12 +62,15 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         }
     }
     private void findView() {
+        mCancel = findViewById(R.id.cancel);
         mtakePic = findViewById(R.id.btn);
+        mClose = findViewById(R.id.close);
         mSurfaceView  = findViewById(R.id.surfaceView);
         final EditText editText = new EditText(this);
         new AlertDialog.Builder(this)
                 .setTitle("请输入本机IP:")
                 .setView(editText)
+                .setCancelable(false)
                 .setPositiveButton("确定", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
@@ -80,6 +85,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         mSurfaceView.getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         mSurfaceView.getHolder().setKeepScreenOn(true);
         mSurfaceView.getHolder().addCallback(new MySurfaceViewCallback());
+        mSurfaceView.setFocusable(true);
+        mtakePic.setOnClickListener(this);
+        mCancel.setOnClickListener(this);
+        mClose.setOnClickListener(this);
 
     }
 
@@ -87,7 +96,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     public void onClick(View v) {
         if(v.getId()==R.id.btn){
             Toast.makeText(MainActivity.this,"开始上传",Toast.LENGTH_SHORT).show();
-            Timer timer =new Timer();
+            timer = new Timer();
             timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -110,7 +119,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                                     {
                                         os.write(buff,0,length);
                                     }
-                                    Log.d(TAG,"test");
 
                                     socket.shutdownOutput();//关闭socket的输出流
                                     //读取响应数据
@@ -134,6 +142,37 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 }
             },0,5000);
         }
+        if(v.getId()==R.id.cancel){
+            if(timer!=null){
+                timer.cancel();
+                timer=null;
+                Toast.makeText(MainActivity.this,"停止上传",Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(MainActivity.this,"请点击上传按钮",Toast.LENGTH_SHORT).show();
+            }
+        }
+        if(v.getId()==R.id.close){
+            AlertDialog alert=new AlertDialog.Builder(MainActivity.this).create();
+            alert.setTitle("你确定退出本应用吗?");
+            alert.setCancelable(false);
+            //添加取消按钮
+            alert.setButton(DialogInterface.BUTTON_NEGATIVE,"否",new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+            //添加"确定"按钮
+            alert.setButton(DialogInterface.BUTTON_POSITIVE,"是", new DialogInterface.OnClickListener() {
+
+                @Override
+                public void onClick(DialogInterface arg0, int arg1) {
+                    finish();
+            }
+            });
+            alert.show();
+        }
     }
 
     private class MySurfaceViewCallback implements SurfaceHolder.Callback {
@@ -141,12 +180,21 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         @Override
         public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
             initCamera();
+            camera.autoFocus(new Camera.AutoFocusCallback() {
+                @Override
+                public void onAutoFocus(boolean success, Camera camera) {
+                    if(success){
+                        camera.cancelAutoFocus();
+                    }
+                }
+            });
         }
 
         @Override
         public void surfaceCreated(SurfaceHolder holder) {
             try {
                 camera = Camera.open(1);
+                initCamera();
                 camera.setPreviewDisplay(holder);
                 camera.startPreview();
             } catch (IOException e) {
@@ -163,13 +211,10 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 camera = null;
             }
         }
-
     }
 
     private void initCamera() {
-
         Camera.Parameters parameters = camera.getParameters();// 设置相机参数
-
         Camera.Size maxPictureSize = parameters.getSupportedPictureSizes().get(0);
         Camera.Size maxPreviewSize = parameters.getSupportedPreviewSizes().get(0);
         for (int i = 0; i < parameters.getSupportedPreviewSizes().size(); i++) {
@@ -180,6 +225,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
             if(s.width==maxPreviewSize.width&&s.height>maxPreviewSize.height){
                 maxPreviewSize = s;
             }
+
         }
         for (int i = 0; i < parameters.getSupportedPictureSizes().size(); i++) {
             Camera.Size s = parameters.getSupportedPictureSizes().get(i);
@@ -193,12 +239,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         parameters.setPictureSize(maxPictureSize.width,maxPictureSize.height);
         parameters.setPreviewSize(maxPreviewSize.width,maxPreviewSize.height);
         parameters.setPictureFormat(PixelFormat.JPEG);
-        parameters.setJpegQuality(50);
-
+        parameters.setJpegQuality(80);
+        //parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         camera.setParameters(parameters);
+        camera.cancelAutoFocus();
         camera.setDisplayOrientation(90);
         camera.startPreview();
-        //camera.cancelAutoFocus();
+
     }
 
     private class MyPictureCallback implements Camera.PictureCallback{
@@ -207,7 +254,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
             FileOutputStream fos = null;
             tempFile = new File(getExternalCacheDir(),"output_image.jpg");
-            //Log.d(TAG,getExternalCacheDir().toString());
             try {
                 fos = new FileOutputStream(tempFile);
                 fos.write(data);
