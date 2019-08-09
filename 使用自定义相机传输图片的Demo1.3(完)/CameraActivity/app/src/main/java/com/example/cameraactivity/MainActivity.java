@@ -27,13 +27,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener {
 
     private SurfaceView mSurfaceView;
     private Socket socket;
+    private Socket socket2;
     private Camera camera;
     private Button mtakePic;
     private final static String TAG="MainActivity001";
@@ -43,7 +42,6 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private File tempFile;
     private Handler handler;
     private Button mClose;
-    private Socket socket2;
     private boolean flag=true;
 
 
@@ -198,7 +196,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         parameters.setJpegQuality(80);
         //parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
         camera.setParameters(parameters);
-        //camera.cancelAutoFocus();
+        camera.cancelAutoFocus();
         camera.setDisplayOrientation(90);
         camera.startPreview();
 
@@ -272,7 +270,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                     }
                     }
             }).start();
-            handler.postDelayed(this,5000);
+            handler.postDelayed(this,3000);
         }
     };
 
@@ -292,6 +290,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                             Log.d(TAG,message);
                             Looper.prepare();
                             Toast.makeText(MainActivity.this,message,Toast.LENGTH_LONG).show();
+                            handler.removeCallbacks(runnable1);
                             flag=false;
                             startActivity(new Intent(MainActivity.this,FirstActivity.class));
                             Looper.loop();
